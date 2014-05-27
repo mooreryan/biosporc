@@ -1,0 +1,18 @@
+@HD	VN:1.5 SO:coordinate
+@SQ	SN:seq1	LN:5000
+@SQ	SN:seq2	LN:5000
+@CO	Example of SAM/BAM file format.
+read1	0	seq2	199	99	50M	*	0	0	*	*
+read2	0	seq2	225	99	50M	*	0	0	*	*
+read3	0	seq2	250	99	50M	*	0	0	*	*
+read4	0	seq2	500	99	50M	*	0	0	*	*
+read5	0	seq2	700	99	50M	*	0	0	*	*
+read6	0	seq2	725	99	50M	*	0	0	*	*
+read7	0	seq2	751	99	50M	*	0	0	*	*
+read8	0	seq2	760	99	50M	*	0	0	*	*
+read9	0	seq2	770	99	50M	*	0	0	*	*
+read10	0	seq2	900	99	50M	*	0	0	*	*
+read11	0	seq2	1150	99	50M	*	0	0	*	*
+read12	0	seq2	1175	99	50M	*	0	0	*	*
+read13	0	seq2	1200	99	50M	*	0	0	*	*
+read14	0	seq2	1201	99	50M	*	0	0	*	*
