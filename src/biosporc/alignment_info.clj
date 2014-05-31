@@ -6,11 +6,10 @@
 
 (defn make-sam-reader-factory []
   (.validationStringency (SamReaderFactory/makeDefault)
-                         (ValidationStringency/valueOf "LENIENT")))
+                         (ValidationStringency/valueOf "SILENT")))
 
 (defn make-sam-reader 
-  "TODO: Doesn't check if files exist.
-   TODO: .hasIndex() always returns true"
+  "TODO: Doesn't check if files exist."
   [sr-fac sorted-bam bam-index]
   (.open sr-fac
          (.index (SamInputResource/of (io/file sorted-bam))
@@ -28,6 +27,19 @@
               :end end
               :len (get-length start end))))
 
-(defn get-align-info [sam-reader]
+(defn get-all-align-info [sam-reader]
   (let [iter (lazy-seq (iterator-seq (.iterator sam-reader)))]
     (map get-record-info iter)))
+
+(defn query-contained-reads [seq start end sam-reader]
+  (.queryContained sam-reader seq start end))
+
+(defn query-overlapping-reads [seq start end sam-reader]
+  (.queryOverlapping sam-reader seq start end))
+
+(defn get-reads [seq start end sam-reader query-fn]
+  (let [reads (query-fn seq start end sam-reader)
+        reads-iter (lazy-seq (iterator-seq reads))]
+    (set (map get-record-info reads-iter))))
+
+(defn bin-reads [contained-reads overlapping-reads])
