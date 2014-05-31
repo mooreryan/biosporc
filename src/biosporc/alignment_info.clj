@@ -31,6 +31,9 @@
   (let [iter (lazy-seq (iterator-seq (.iterator sam-reader)))]
     (map get-record-info iter)))
 
+;; TODO consider laziness by using filters and lazy-seq around the
+;; iterator-seq instead of set differences
+
 (defn query-contained-reads [seq start end sam-reader]
   (.queryContained sam-reader seq start end))
 
@@ -38,8 +41,12 @@
   (.queryOverlapping sam-reader seq start end))
 
 (defn get-reads [seq start end sam-reader query-fn]
-  (let [reads (query-fn seq start end sam-reader)
-        reads-iter (lazy-seq (iterator-seq reads))]
-    (set (map get-record-info reads-iter))))
+  (let [iter (query-fn seq start end sam-reader)
+        reads (iterator-seq iter)
+        read-set (set (map get-record-info reads))]
+    (.close iter)
+    read-set))
 
-(defn bin-reads [contained-reads overlapping-reads])
+(defn bin-reads [contained-reads overlapping-reads]
+  (hash-map :islanders contained-reads
+            :bridgers (clojure.set/difference overlapping-reads contained-reads)))

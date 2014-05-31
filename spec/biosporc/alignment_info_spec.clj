@@ -44,7 +44,7 @@
                      {:read "read3" :ref "seq2" :start 250 :end 299 :len 50}])
                (get-reads "seq2" 200 280 @sam-reader query-overlapping-reads)))))
 
-#_(describe "bin-reads"
+(describe "bin-reads"
   (with sam-reader 
         (make-sam-reader (make-sam-reader-factory) sorted-bam bam-index))
   (with contained-reads 
