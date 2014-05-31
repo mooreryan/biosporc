@@ -56,3 +56,4 @@
               :bridgers (set [{:read "read1" :ref "seq2" :start 199 :end 248 :len 50}
                               {:read "read3" :ref "seq2" :start 250 :end 299 :len 50}])}
              (bin-reads @contained-reads @overlapping-reads))))
+

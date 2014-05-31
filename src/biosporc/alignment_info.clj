@@ -9,7 +9,7 @@
                          (ValidationStringency/valueOf "SILENT")))
 
 (defn make-sam-reader 
-  "TODO: Doesn't check if files exist."
+  "TODO: Doesn't handle file exceptions"
   [sr-fac sorted-bam bam-index]
   (.open sr-fac
          (.index (SamInputResource/of (io/file sorted-bam))
@@ -27,7 +27,9 @@
               :end end
               :len (get-length start end))))
 
-(defn get-all-align-info [sam-reader]
+(defn get-all-align-info
+  "Returns a seq of maps containing info for all sequences."
+  [sam-reader]
   (let [iter (lazy-seq (iterator-seq (.iterator sam-reader)))]
     (map get-record-info iter)))
 
@@ -40,13 +42,20 @@
 (defn query-overlapping-reads [seq start end sam-reader]
   (.queryOverlapping sam-reader seq start end))
 
-(defn get-reads [seq start end sam-reader query-fn]
+(defn get-reads 
+  "Gets reads that are either contained or overlapping the given
+  interval depending on whehter query-contained-reads or
+  query-overlapping-reads is passed. Closes the iterator."  
+  [seq start end sam-reader query-fn]
   (let [iter (query-fn seq start end sam-reader)
         reads (iterator-seq iter)
         read-set (set (map get-record-info reads))]
     (.close iter)
     read-set))
 
-(defn bin-reads [contained-reads overlapping-reads]
+(defn bin-reads 
+  "Partitions the contained and overlapping reads into islanders and
+  bridgers."
+  [contained-reads overlapping-reads]
   (hash-map :islanders contained-reads
             :bridgers (clojure.set/difference overlapping-reads contained-reads)))
