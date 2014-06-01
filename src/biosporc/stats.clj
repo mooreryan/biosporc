@@ -31,7 +31,8 @@
 
 (defn pull-orf-names [orf-map]
   (hash-map :orf (:orf orf-map)
-            :ref (:ref orf-map)))
+            :ref (:ref orf-map)
+            :len (:len orf-map)))
 
 (defn ib-ratios 
   "Gives the non-normalized ib-ratios for all the orfs on a contig."

@@ -78,7 +78,8 @@
                                           ;; over the end
                                           1451 1461 1471 1481 1491]))}]) ;; 7
   (it "gives the ib-ratios for each orf"
-    (should= [{:orf "orf-101" :ref "seq2" :islanders 10 :bridgers 6 :ib-ratio 10/16}
-              {:orf "orf-601" :ref "seq2" :islanders 12 :bridgers 5 :ib-ratio 12/17}
-              {:orf "orf-1201" :ref "seq2" :islanders 8 :bridgers 7 :ib-ratio 8/15}]
-             (ib-ratios @a-contigs-orfs @a-contigs-reads))))
+    (should= 
+     [{:orf "orf-101" :ref "seq2" :len 500 :islanders 10 :bridgers 6 :ib-ratio 10/16}
+      {:orf "orf-601" :ref "seq2" :len 400 :islanders 12 :bridgers 5 :ib-ratio 12/17}
+      {:orf "orf-1201" :ref "seq2" :len 300 :islanders 8 :bridgers 7 :ib-ratio 8/15}]
+     (ib-ratios @a-contigs-orfs @a-contigs-reads))))
