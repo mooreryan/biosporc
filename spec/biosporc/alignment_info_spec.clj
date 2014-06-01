@@ -51,7 +51,7 @@
         (get-reads "seq2" 200 280 @sam-reader query-contained-reads))
   (with overlapping-reads 
         (get-reads "seq2" 200 280 @sam-reader query-overlapping-reads))
-  (it "returns a map with the islanders and bridgers"
+  (it "returns a map with the islanders and bridgers for a given region"
     (should= {:islanders (set [{:read "read2" :ref "seq2" :start 225 :end 274 :len 50}])
               :bridgers (set [{:read "read1" :ref "seq2" :start 199 :end 248 :len 50}
                               {:read "read3" :ref "seq2" :start 250 :end 299 :len 50}])}
