@@ -57,3 +57,43 @@
                               {:read "read3" :ref "seq2" :start 250 :end 299 :len 50}])}
              (bin-reads @contained-reads @overlapping-reads))))
 
+(describe "single-orf-alignment-info"
+  (with sam-reader 
+        (make-sam-reader (make-sam-reader-factory) sorted-bam bam-index))
+  (with orf-map (hash-map :orf "orf1" :ref "seq2" :start 200 :end 280 :len 81))
+  (it "takes an orf map and gives alignment info for it"
+    (should= 
+     {:islanders (set [{:read "read2" :ref "seq2" :start 225 :end 274 :len 50}])
+      :bridgers (set [{:read "read1" :ref "seq2" :start 199 :end 248 :len 50}
+                      {:read "read3" :ref "seq2" :start 250 :end 299 :len 50}])}
+     (single-orf-alignment-info @orf-map @sam-reader))))
+
+(describe "alignment-info"
+  (with sam-reader 
+        (make-sam-reader (make-sam-reader-factory) sorted-bam bam-index))
+  (with orf-map (vector {:orf "orf1" :ref "seq2" :start 200 :end 280 :len 81}
+                        {:orf "orf2" :ref "seq2" :start 200 :end 280 :len 81}))
+  (it "calls single-orf-alignment info for each orf-map in given collection"
+    (should= (hash-map :orf1
+                       {:islanders (set [{:read "read2" :ref "seq2" :start 225 :end 274 :len 50}])
+                        :bridgers (set [{:read "read1" :ref "seq2" :start 199 :end 248 :len 50}
+                                        {:read "read3" :ref "seq2" :start 250 :end 299 :len 50}])}
+                       :orf2
+                       {:islanders (set [{:read "read2" :ref "seq2" :start 225 :end 274 :len 50}])
+                        :bridgers (set [{:read "read1" :ref "seq2" :start 199 :end 248 :len 50}
+                                        {:read "read3" :ref "seq2" :start 250 :end 299 :len 50}])})
+             (alignment-info @orf-map @sam-reader))))
+
+(describe "alignment-info-for-random-orf-maps"
+  (with sam-reader 
+        (make-sam-reader (make-sam-reader-factory) sorted-bam bam-index))
+  (with orf-map (vector {:orf "orf1" :ref "seq2" :start 200 :end 280 :len 81}
+                        {:orf "orf2" :ref "seq2" :start 200 :end 280 :len 81}))
+  (it "calls single-orf-alignment info for each orf-map in given collection but throw them in a vec"
+    (should= (seq (vector {:islanders (set [{:read "read2" :ref "seq2" :start 225 :end 274 :len 50}])
+                           :bridgers (set [{:read "read1" :ref "seq2" :start 199 :end 248 :len 50}
+                                           {:read "read3" :ref "seq2" :start 250 :end 299 :len 50}])}
+                          {:islanders (set [{:read "read2" :ref "seq2" :start 225 :end 274 :len 50}])
+                           :bridgers (set [{:read "read1" :ref "seq2" :start 199 :end 248 :len 50}
+                                           {:read "read3" :ref "seq2" :start 250 :end 299 :len 50}])}))
+             (alignment-info-for-random-orf-maps @orf-map @sam-reader))))

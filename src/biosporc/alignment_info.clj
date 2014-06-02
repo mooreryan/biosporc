@@ -59,3 +59,25 @@
   [contained-reads overlapping-reads]
   (hash-map :islanders contained-reads
             :bridgers (clojure.set/difference overlapping-reads contained-reads)))
+
+(defn single-orf-alignment-info [orf-map sam-reader]
+  (let [get-reads-par (partial get-reads 
+                               (:ref orf-map)
+                               (:start orf-map)
+                               (:end orf-map)
+                               sam-reader)
+        contained-reads (get-reads-par query-contained-reads)
+        overlapping-reads (get-reads-par query-overlapping-reads)]
+    (bin-reads contained-reads overlapping-reads)))
+
+(defn alignment-info [orf-maps sam-reader]
+  (into (hash-map) 
+        (map (fn [orf-map]
+               (hash-map (keyword (:orf orf-map)) 
+                         (single-orf-alignment-info orf-map sam-reader)))
+             orf-maps)))
+
+(defn alignment-info-for-random-orf-maps [orf-maps sam-reader]
+  (map (fn [orf-map]
+         (single-orf-alignment-info orf-map sam-reader))
+       orf-maps))
