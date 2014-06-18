@@ -1,8 +1,15 @@
 (ns biosporc.stats
   (:require [incanter.stats :as stat]
             [biosporc.alignment-info :refer :all])
-  (:import (org.apache.commons.math3.stat.inference MannWhitneyUTest
+  (:import (org.apache.commons.math3.stat.inference WilcoxonSignedRankTest
                                                     TTest)))
+
+;; (defn wilcox [jacknifed-ibrs real-ibr]
+;;   (let [count (count jacknifed-ibrs)]
+;;     (.wilcoxonSignedRankTest (WilcoxonSignedRankTest.) 
+;;                              (double-array jacknifed-ibrs)
+;;                              (double-array (repeat count real-ibr))
+;;                              false)))
 
 (defn avg-read-len 
   "The input is from the biosporc.alignment_info/bin-reads
@@ -28,7 +35,7 @@
   [read-map]
   (let [islander-count (count (:islanders read-map))
         bridger-count (count (:bridgers read-map))]
-    (hash-map :islanders islander-count
+   (hash-map :islanders islander-count
               :bridgers bridger-count
               :ib-ratio (if (zero? (+ islander-count bridger-count))
                           ;;:TODO-deal-with-this in a smarter way,
@@ -46,11 +53,6 @@
   "Gives the non-normalized ib-ratios for all the orfs on a contig."
   [orf-maps read-maps]
   (map merge (map pull-orf-names orf-maps) (map ibr read-maps)))
-
-;; (defn mann-whitney [ibr-vals irb-to-test]
-;;   (.mannWhitneyUTest (MannWhitneyUTest.)
-;;                     (double-array ibr-vals)
-;;                     (double-array (vector irb-to-test))))
 
 (defn make-random-orf 
   "TODO: test that it never goes past the end of the contig"

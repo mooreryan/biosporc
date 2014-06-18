@@ -10,6 +10,16 @@
 (def bam-index
   (str base "/test_files/unpaired.sorted.bam.bai"))
 
+(describe "wilcox"
+  (with jacknife-ib-ratios [1/2 1/3 1/2 1/4 2/3 1/6 4/5])
+  (with sig-jacknife-ib-ratios [1/2 1/2 1/2 1/4 2/3 1/2 4/5])
+  (with real-ib-ratio 1/3)
+
+  (it "does the wilcox jawn"
+    (pending)
+    #_(should= :apple
+             (wilcox @jacknife-ib-ratios @real-ib-ratio))))
+
 (describe "avg-read-len"
   (with reads 
         (hash-map :islanders
@@ -99,11 +109,6 @@
       {:orf "orf-1201" :ref "seq2" :len 300 :islanders 8 :bridgers 7 :ib-ratio 8/15}]
      (ib-ratios @a-contigs-orfs @a-contigs-reads))))
 
-;; (describe "mann-whitney"
-;;   (it "do the mann-whitney test"
-;;     (should= :apple
-;;              (mann-whitney (stat/sample-normal 1000 :mean 0.75 :sd 0.01)
-;;                            0.01))))
 
 (describe "make-random-orf"
   (with base-orf (build-orf 150 300))
