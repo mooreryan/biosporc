@@ -10,3 +10,6 @@ pom.xml
 .lein-plugins
 .lein-repl-history
 .Rhistory
+*.R
+.RData
+*.Rout
