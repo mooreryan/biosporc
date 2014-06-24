@@ -1,15 +1,25 @@
 (ns biosporc.stats
   (:require [incanter.stats :as stat]
             [biosporc.alignment-info :refer :all])
+  (:use [clojure.java.shell :only [sh]]
+        [clojure.string :only [join replace]])
   (:import (org.apache.commons.math3.stat.inference WilcoxonSignedRankTest
                                                     TTest)))
 
-;; (defn wilcox [jacknifed-ibrs real-ibr]
-;;   (let [count (count jacknifed-ibrs)]
-;;     (.wilcoxonSignedRankTest (WilcoxonSignedRankTest.) 
-;;                              (double-array jacknifed-ibrs)
-;;                              (double-array (repeat count real-ibr))
-;;                              false)))
+(defn r [r-string]
+  (let [{:keys [exit out err]} (apply sh ["Rscript" "-e" r-string])] 
+    (if (zero? exit) out err)))
+
+(defn wilcox 
+  "Returns 1.0 if p-val is NA, else returns the p-val for R's
+  wilcox.test function."  
+  [ib-ratio jacknife-ib-ratios]
+  (let [x (format "c(%s)" (join ", " jacknife-ib-ratios))
+        mu ib-ratio
+        report (r (format "wilcox.test(x=%s, mu=%s)" x mu))
+        p-val-str (replace (re-find #"p-value = .*" report)
+                           #"p-value = " "")]
+    (if (= "NA" p-val-str) 1.0 (Double. p-val-str))))
 
 (defn avg-read-len 
   "The input is from the biosporc.alignment_info/bin-reads
@@ -42,7 +52,8 @@
                           ;;right now since 1 is bad, make it 2 cos
                           ;;having nothing is REALLY bad
                           2
-                          (/ islander-count (+ islander-count bridger-count))))))
+                          (/ islander-count (+ islander-count 
+                                               bridger-count))))))
 
 (defn pull-orf-names [orf-map]
   (hash-map :orf (:orf orf-map)
@@ -67,17 +78,22 @@
 (defn ibr-ratios-for-random-orfs [orf-maps read-maps]
   (map :ib-ratio (ib-ratios orf-maps read-maps)))
 
-(defn different-mean? [jacknife-ib-ratios real-ib-ratio]
+(defn different-mean? [real-ib-ratio jacknife-ib-ratios]
   (let [confidence 0.05
-        pval (:p-value (stat/t-test jacknife-ib-ratios :mu real-ib-ratio))]
+        pval (wilcox real-ib-ratio jacknife-ib-ratios)]
     (if (<= pval confidence) pval)))
 
 (defn different?
-  "Doing 30 random orf maps cos of the central limit theorem magic."
-  [orf-map read-map sam-reader]
-  (let [random-orf-maps (make-random-orfs 30 orf-map 5000)
-        read-maps (alignment-info-for-random-orf-maps random-orf-maps sam-reader)
-        ibr-ratios-from-random-orfs (ibr-ratios-for-random-orfs random-orf-maps read-maps)
+  "Doing 100 random orf maps cos WTFN?"
+  [orf-map read-map sam-reader ref-lengths]
+  (let [num 30
+        ref-length ((keyword (:ref orf-map)) ref-lengths)
+        
+        random-orf-maps (make-random-orfs num orf-map ref-length)
+        read-maps (alignment-info-for-random-orf-maps 
+                   random-orf-maps sam-reader)
+        ibr-ratios-from-random-orfs (ibr-ratios-for-random-orfs
+                                     random-orf-maps read-maps)
         real-ib-ratio (ibr read-map)]
     
     ;; (println "this orf-map")
@@ -93,4 +109,5 @@
     ;; (println "ibr-ratios-from-random-orfs" ibr-ratios-from-random-orfs)
     ;; (println "this ibr" (:ib-ratio real-ib-ratio))
 
-    (different-mean? ibr-ratios-from-random-orfs (:ib-ratio real-ib-ratio))))
+    (different-mean? (:ib-ratio real-ib-ratio) 
+                     ibr-ratios-from-random-orfs)))

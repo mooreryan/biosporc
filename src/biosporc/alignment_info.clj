@@ -60,7 +60,10 @@
   (hash-map :islanders contained-reads
             :bridgers (clojure.set/difference overlapping-reads contained-reads)))
 
-(defn single-orf-alignment-info [orf-map sam-reader]
+(defn single-orf-alignment-info 
+  "Given a single orf-map and the sam-reader, gets the islanders and
+  bridgers associated with that given orf."
+  [orf-map sam-reader]
   (let [get-reads-par (partial get-reads 
                                (:ref orf-map)
                                (:start orf-map)
@@ -81,3 +84,14 @@
   (map (fn [orf-map]
          (single-orf-alignment-info orf-map sam-reader))
        orf-maps))
+
+(defn get-reference-lengths 
+  "From the sam-reader, return a map with keys and values being
+  references and lengths respectively."
+  [sam-reader]
+  (let [sam-file-header (.getFileHeader sam-reader)
+        sam-sequence-dictionary (.getSequenceDictionary sam-file-header)
+        sequences (.getSequences sam-sequence-dictionary)]
+    (zipmap
+     (map #(keyword (.getSequenceName %)) sequences)
+     (map #(.getSequenceLength %) sequences))))

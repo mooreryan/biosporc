@@ -60,12 +60,16 @@
 (describe "single-orf-alignment-info"
   (with sam-reader 
         (make-sam-reader (make-sam-reader-factory) sorted-bam bam-index))
-  (with orf-map (hash-map :orf "orf1" :ref "seq2" :start 200 :end 280 :len 81))
+  (with orf-map (hash-map :orf "orf1" :ref "seq2" :start 200 :end 280 
+                          :len 81))
   (it "takes an orf map and gives alignment info for it"
     (should= 
-     {:islanders (set [{:read "read2" :ref "seq2" :start 225 :end 274 :len 50}])
-      :bridgers (set [{:read "read1" :ref "seq2" :start 199 :end 248 :len 50}
-                      {:read "read3" :ref "seq2" :start 250 :end 299 :len 50}])}
+     {:islanders (set [{:read "read2" :ref "seq2" :start 225 :end 274 
+                        :len 50}])
+      :bridgers (set [{:read "read1" :ref "seq2" :start 199 :end 248 
+                       :len 50}
+                      {:read "read3" :ref "seq2" :start 250 :end 299 
+                       :len 50}])}
      (single-orf-alignment-info @orf-map @sam-reader))))
 
 (describe "alignment-info"
@@ -97,3 +101,10 @@
                            :bridgers (set [{:read "read1" :ref "seq2" :start 199 :end 248 :len 50}
                                            {:read "read3" :ref "seq2" :start 250 :end 299 :len 50}])}))
              (alignment-info-for-random-orf-maps @orf-map @sam-reader))))
+
+(describe "get-reference-lengths"
+  (with sam-reader (make-sam-reader (make-sam-reader-factory) 
+                                    sorted-bam bam-index))
+  (it "gets lengths for all the references"
+    (should= {:seq1 5000 :seq2 5000}
+             (get-reference-lengths @sam-reader))))

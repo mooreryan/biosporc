@@ -4,28 +4,44 @@
             [biosporc.alignment-info :refer :all]
             [incanter.stats :as stat]))
 
-(def base "/Users/ryanmoore/projects/wommack/biosporc")
+(def base "/Users/ryanmoore/projects/wommack/biosporc/test_files")
 (def sorted-bam
-  (str base "/test_files/unpaired.sorted.bam"))
+  (str base "/unpaired.sorted.bam"))
 (def bam-index
-  (str base "/test_files/unpaired.sorted.bam.bai"))
+  (str base "/unpaired.sorted.bam.bai"))
+
+(describe "r"
+  (with working-script "sum <- 2 + 2;cat(sum)")
+  (with broken-script "sum <- 2 + 2;cat(sum))")
+  (context "the R script terminates with exit code 0"
+    (it "returns the standard out as a string"
+      (should= "4"
+               (r @working-script))))
+  (context "the R script terminates with failures"
+    (it "returns the stderr output"
+      (should= (str "Error: unexpected ')' in \"cat(sum))\"\n"
+                    "Execution halted\n")
+               (r @broken-script)))))
 
 (describe "wilcox"
   (with jacknife-ib-ratios [1/2 1/3 1/2 1/4 2/3 1/6 4/5])
-  (with sig-jacknife-ib-ratios [1/2 1/2 1/2 1/4 2/3 1/2 4/5])
   (with real-ib-ratio 1/3)
-
-  (it "does the wilcox jawn"
-    (pending)
-    #_(should= :apple
-             (wilcox @jacknife-ib-ratios @real-ib-ratio))))
+  (it "returns the p-value from the non-paired wilcox test"
+    (should= 0.1411
+             (wilcox @real-ib-ratio @jacknife-ib-ratios)))
+  (context "with p-val of NA"
+    (it "returns a value of 1"
+      (should= 1.0
+               (wilcox 1 [1 1 1 1 1])))))
 
 (describe "avg-read-len"
   (with reads 
         (hash-map :islanders
-                  (set [{:read "read2" :ref "seq2" :start 225 :end 274 :len 50}])
+                  (set [{:read "read2" :ref "seq2" :start 225 :end 274 
+                         :len 50}])
                   :bridgers
-                  (set [{:read "read3" :ref "seq2" :start 301 :end 400 :len 100}])))
+                  (set [{:read "read3" :ref "seq2" :start 301 :end 400 
+                         :len 100}])))
   (it "gets mean of all reads both islanders and bridgers for one region"
     (should= 75.0
              (avg-read-len @reads))))
@@ -104,32 +120,45 @@
                                           1451 1461 1471 1481 1491]))}]) ;; 7
   (it "gives the ib-ratios for each orf"
     (should= 
-     [{:orf "orf-101" :ref "seq2" :len 500 :islanders 10 :bridgers 6 :ib-ratio 10/16}
-      {:orf "orf-601" :ref "seq2" :len 400 :islanders 12 :bridgers 5 :ib-ratio 12/17}
-      {:orf "orf-1201" :ref "seq2" :len 300 :islanders 8 :bridgers 7 :ib-ratio 8/15}]
+     [{:orf "orf-101" :ref "seq2" :len 500 :islanders 10 :bridgers 6 
+       :ib-ratio 10/16}
+      {:orf "orf-601" :ref "seq2" :len 400 :islanders 12 :bridgers 5 
+       :ib-ratio 12/17}
+      {:orf "orf-1201" :ref "seq2" :len 300 :islanders 8 :bridgers 7 
+       :ib-ratio 8/15}]
      (ib-ratios @a-contigs-orfs @a-contigs-reads))))
 
 
 (describe "make-random-orf"
-  (with base-orf (build-orf 150 300))
-  (it "makes an orf like the given one, but starting at a different location"
+  (with start 150)
+  (with length 300)
+  (with base-orf (build-orf @start @length))
+  (it (str "makes an orf like the given one, but starting at a "
+           "different location")
     (let [random-orf (make-random-orf @base-orf 1000)] 
-      (should= (build-orf (:start random-orf) 300)
+      (should= (build-orf (:start random-orf) @length)
                random-orf))))
 
 (describe "make-random-orfs"
+  (with start 150)
+  (with length 300)
   (it "calls make-random-orf as many times as you ask for"
     (should= 10
-             (count (make-random-orfs 10 (build-orf 150 300) 1000)))))
+             (count (make-random-orfs 10 (build-orf @start @length) 
+                                      1000)))))
 
 (describe "ibr-ratios-for-random-orfs"
-  (with sam-reader (make-sam-reader (make-sam-reader-factory) sorted-bam bam-index))
+  (with sam-reader (make-sam-reader (make-sam-reader-factory) 
+                                    sorted-bam bam-index))
   (with random-orf-maps (make-random-orfs 30 (build-orf 150 300) 1000))
-  (with read-maps (alignment-info-for-random-orf-maps @random-orf-maps @sam-reader))
+  (with read-maps (alignment-info-for-random-orf-maps @random-orf-maps 
+                                                      @sam-reader))
   
-  (it "returns a seq of the ibr ratios for each orf represented in the given orf map"
+  (it (str "returns a seq of the ibr ratios for each orf represented "
+           "in the given orf map")
     (should= 30
-             (count (ibr-ratios-for-random-orfs @random-orf-maps @read-maps)))))
+             (count (ibr-ratios-for-random-orfs @random-orf-maps
+                                                @read-maps)))))
 
 (describe "different-mean?"
   (with jacknife-ib-ratios [1/2 1/3 1/2 1/4 2/3 1/6 4/5])
@@ -139,16 +168,13 @@
   (context "with something that is not significant"
     (it "returns nil"
       (should= nil
-               (different-mean? @jacknife-ib-ratios @real-ib-ratio))))
-
+               (different-mean? @real-ib-ratio @jacknife-ib-ratios))))
   (context "with something that is significantly different"
     (it "returns the p-value"
       ;; test value is from R stats software
-      (let [pval-from-r 0.02183
-            pval-from-different-function (different-mean? @sig-jacknife-ib-ratios @real-ib-ratio)
-            rounding-error 0.00001]
-        (should (< (Math/abs (- pval-from-r pval-from-different-function))
-                   rounding-error))))))
+      (should= 0.03142
+               (different-mean? @real-ib-ratio 
+                                @sig-jacknife-ib-ratios)))))
 
 ;; I want a function that given an orf map, it performs the jacknifing
 ;; and then checks to see if the mean of the ib-ratios of the
@@ -156,18 +182,29 @@
 ;; it is different, the ORF is bad and you should worry about it, but
 ;; if it isn't different, the ORF is good. Hooray!
 (describe "different?"
-  (with sig-dif-orf-map (build-orf 100 1000))
-  (with sig-dif-orf-map-read-map (single-orf-alignment-info @sig-dif-orf-map @sam-reader))
-  (with sam-reader (make-sam-reader (make-sam-reader-factory) sorted-bam bam-index))
+  (with orf-map (build-orf 100 1000))
+  (with read-map (single-orf-alignment-info 
+                  @orf-map @sam-reader))
+  (with sam-reader (make-sam-reader (make-sam-reader-factory) 
+                                    sorted-bam 
+                                    bam-index))
+  (with ref-lengths (get-reference-lengths @sam-reader))
+  (with confidence 0.5)
 
-  (context "when the mean of the jacknifes is different from the real ib-ratio"
-    (it "gives the p-val"      
-      (pending "It does give the a p-value that matches R, but I'm not
-      sure if it calculates the ib-ratios corretctly. Although, I may
-      be cos I tested it earlier. Do I really need to test this
-      again? (different? @sig-dif-orf-map @sig-dif-orf-map-read-map
-      @sam-reader)")))
+  (context (str "when the mean of the jacknifes is different from the "
+                "real ib-ratio")
+    (it "gives the p-val"
+      (should (> @confidence
+                 (different? @orf-map 
+                             @read-map 
+                             @sam-reader 
+                             @ref-lengths)))))
 
-  (context "when the mean of the jacknifes is not different from the real ib-ratio"
+  (context (str "when the mean of the jacknifes is not different from "
+                "the real ib-ratio")
     (it "returns nil"
-      (pending))))
+      (pending "Need to make a contig with a good ratio.")
+      (should-not (different? @orf-map 
+                              @read-map 
+                              @sam-reader 
+                              @ref-lengths)))))
