@@ -10,6 +10,9 @@
 (def bam-index
   (str base "/unpaired.sorted.bam.bai"))
 
+(def c4169-bam (str base "/C4169/C4169.sorted.bam"))
+(def c4169-bai (str base "/C4169/C4169.sorted.bam.bai"))
+
 (describe "r"
   (with working-script "sum <- 2 + 2;cat(sum)")
   (with broken-script "sum <- 2 + 2;cat(sum))")
@@ -191,6 +194,8 @@
   (with ref-lengths (get-reference-lengths @sam-reader))
   (with confidence 0.5)
 
+  
+
   (context (str "when the mean of the jacknifes is different from the "
                 "real ib-ratio")
     (it "gives the p-val"
@@ -200,11 +205,19 @@
                              @sam-reader 
                              @ref-lengths)))))
 
+  (with good-orf {:orf "orf1" :ref "C4169" :start 2 :end 163 
+                  :len (inc (- 163 2))})
+  (with good-sr (make-sam-reader (make-sam-reader-factory) 
+                                 c4169-bam
+                                 c4169-bai))
+  (with good-read-map (single-orf-alignment-info @good-orf @good-sr))
+  (with good-ref-lengths (get-reference-lengths @good-sr))
+
   (context (str "when the mean of the jacknifes is not different from "
                 "the real ib-ratio")
     (it "returns nil"
       (pending "Need to make a contig with a good ratio.")
-      (should-not (different? @orf-map 
-                              @read-map 
-                              @sam-reader 
-                              @ref-lengths)))))
+      (should-not (different? @good-orf
+                              @good-read-map 
+                              @good-sr
+                              @good-ref-lengths)))))
