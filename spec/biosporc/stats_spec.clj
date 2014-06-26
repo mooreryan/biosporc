@@ -37,18 +37,6 @@
       (should= 1.0
                (wilcox 1 [1 1 1 1 1])))))
 
-(describe "avg-read-len"
-  (with reads 
-        (hash-map :islanders
-                  (set [{:read "read2" :ref "seq2" :start 225 :end 274 
-                         :len 50}])
-                  :bridgers
-                  (set [{:read "read3" :ref "seq2" :start 301 :end 400 
-                         :len 100}])))
-  (it "gets mean of all reads both islanders and bridgers for one region"
-    (should= 75.0
-             (avg-read-len @reads))))
-
 (defn build-orf [start len]
   (hash-map :orf (str "orf-" start) 
             :ref "seq2" 
@@ -79,11 +67,6 @@
                                     951 961
                                     ;; over the end
                                     1451 1461 1471 1481 1491]))}]) ;; 7
-
-(describe "all-lengths"
-  (it "gets all the lengths from a collection of read maps"
-    (should= (repeat 48 100)
-             (all-lengths a-contigs-reads))))
 
 (describe "ibr"
   (with read-map 

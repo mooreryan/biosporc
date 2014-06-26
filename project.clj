@@ -1,14 +1,11 @@
-(defproject biosporc_new "0.1.0-SNAPSHOT"
-  :description "New version of BioSPORC"
+(defproject biosporc_new "0.0.1"
+  :description "BioSPORC"
   :url "Let's hunt some chimeras."
   :license {:name "GNU General Public License, GPLv3"
             :url "http://www.gnu.org/licenses/gpl.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [me.raynes/fs "1.4.4"]
                  [htsjdk/samtools "1.114"]
                  [picard "1.114"]
-                 [incanter "1.5.5"]
-                 [org.apache.commons/commons-math3 "3.3"]
                  [org.clojure/tools.cli "0.3.1"]]
   :repositories [["local" 
                   {:url ~(str (.toURI (java.io.File. "repo")))}]]
