@@ -61,34 +61,72 @@
             :end (dec (+ start len)) 
             :len len))
 
-(defn build-read [start]
+(defn build-read [mapped start]
   (hash-map :read (str "read-" start) 
             :ref "seq2" 
             :start start 
             :end (dec (+ start 100)) 
-            :len 100))
+            :len 100
+            :mapped mapped))
 
 (def a-contigs-reads
-  [{:islanders (set (map build-read (range 101 201 10))) ;; 10
-    :bridgers (set (map build-read [;; overlapping the start
-                                    51 61 71 
-                                    ;; overlapping the ends
-                                    551 561 571]))} ;; 6
-   {:islanders (set (map build-read (range 601 721 10))) ;; 12
-    :bridgers (set (map build-read [;; overlap the start
-                                    551 561 571 
-                                    ;; overlap the end
-                                    951 961]))} ;; 5
-   {:islanders (set (map build-read (range 1201 1281 10))) ;; 8
-    :bridgers (set (map build-read [;; overlap the start
-                                    951 961
-                                    ;; over the end
-                                    1451 1461 1471 1481 1491]))}]) ;; 7
+  [{:islanders (set (map #(build-read true %) (range 101 201 10))) ;; 10
+    :bridgers (set (map #(build-read true %) [;; overlapping the start
+                                              51 61 71 
+                                              ;; overlapping the ends
+                                              551 561 571]))} ;; 6
+   {:islanders (set (map #(build-read true %) (range 601 721 10))) ;; 12
+    :bridgers (set (map #(build-read true %) [;; overlap the start
+                                              551 561 571 
+                                              ;; overlap the end
+                                              951 961]))} ;; 5
+   {:islanders (set (map #(build-read true %) (range 1201 1281 10))) ;; 8
+    :bridgers (set (map #(build-read true %) 
+                        [;; overlap the start
+                         951 961
+                         ;; over the end
+                         1451 1461 1471 1481 1491]))}]) ;; 7
+
+(describe "filter-unmapped-reads"
+  (it "filters unmapped reads from coll of read maps"
+    (should= [{:ref "seq2" :read "read2" :mapped true}]
+             (filter-unmapped-reads [{:ref "seq2" :read "read1" 
+                                      :mapped false}
+                                     {:ref "seq2" :read "read2" 
+                                      :mapped true}]))))
+
+(describe "collapse-proper-pairs"
+  (it "keeps only the first read of any proper pair"
+    (should= [{:ref "seq2" :read "read1" :mapped true :proper-pair true
+               :first true}]
+             (collapse-proper-pairs 
+              [{:ref "seq2" :read "read1" :mapped true :proper-pair true
+                :first true}
+               {:ref "seq2" :read "read2" :mapped true :proper-pair true
+                :first false}
+               {:ref "seq2" :read "read2" :mapped true :proper-pair false
+                :first nil}]))))
+
+(describe "keep-mapped-singles-and-collapse-proper-pairs"
+  (it (str "keeps only the first read of any proper pair or a read not "
+           "in a proper pair if it is mapped")
+    (should= [{:ref "seq2" :read "read1" :mapped true :proper-pair true
+               :first true}
+              {:ref "seq2" :read "read2" :mapped true :proper-pair false
+                :first nil}]
+             (keep-mapped-singles-and-collapse-proper-pairs
+              [{:ref "seq2" :read "read1" :mapped true :proper-pair true
+                :first true}
+               {:ref "seq2" :read "read2" :mapped true :proper-pair true
+                :first false}
+               {:ref "seq2" :read "read2" :mapped true :proper-pair false
+                :first nil}]))))
 
 (describe "ibr"
   (with read-map 
-        {:islanders (set (map build-read (range 101 201 10)))
-         :bridgers (set (map build-read [51 61 71 551 561 571]))})
+        {:islanders (set (map #(build-read true %) (range 101 201 10)))
+         :bridgers (set (map #(build-read true %) 
+                             [51 61 71 551 561 571]))})
   (with no-is-or-bs {:islanders #{} :bridgers #{}})
 
   (context "as long as there is at least one islander or bridger"
@@ -98,7 +136,10 @@
   (context "if there are no islanders or bridgers"
     (it "returns an ib-ratio of 2"
       (should= {:islanders 0, :bridgers 0, :ib-ratio 2}
-               (ibr @no-is-or-bs)))))
+               (ibr @no-is-or-bs))))
+  (context "with bad reads"
+    (it "will throw out unmapped and second reads of proper pairs"
+      (pending "make a test that checks this"))))
 
 (describe "ib-ratios"
   (with a-contigs-orfs 
@@ -106,21 +147,21 @@
               lengths [500 400 300]]
           (map build-orf starts lengths)))
   (with a-contigs-reads 
-        [{:islanders (set (map build-read (range 101 201 10))) ;; 10
-          :bridgers (set (map build-read [;; overlapping the start
-                                          51 61 71 
-                                          ;; overlapping the ends
-                                          551 561 571]))} ;; 6
-         {:islanders (set (map build-read (range 601 721 10))) ;; 12
-          :bridgers (set (map build-read [;; overlap the start
-                                          551 561 571 
-                                          ;; overlap the end
-                                          951 961]))} ;; 5
-         {:islanders (set (map build-read (range 1201 1281 10))) ;; 8
-          :bridgers (set (map build-read [;; overlap the start
-                                          951 961
-                                          ;; over the end
-                                          1451 1461 1471 1481 1491]))}]) ;; 7
+        [{:islanders (set (map #(build-read true %) (range 101 201 10))) ;; 10
+          :bridgers (set (map #(build-read true %) [;; overlapping the start
+                                                    51 61 71 
+                                                    ;; overlapping the ends
+                                                    551 561 571]))} ;; 6
+         {:islanders (set (map #(build-read true %) (range 601 721 10))) ;; 12
+          :bridgers (set (map #(build-read true %) [;; overlap the start
+                                                    551 561 571 
+                                                    ;; overlap the end
+                                                    951 961]))} ;; 5
+         {:islanders (set (map #(build-read true %) (range 1201 1281 10))) ;; 8
+          :bridgers (set (map #(build-read true %) [;; overlap the start
+                                                    951 961
+                                                    ;; over the end
+                                                    1451 1461 1471 1481 1491]))}]) ;; 7
   (it "gives the ib-ratios for each orf"
     (should= 
      [{:orf "orf-101" :ref "seq2" :len 500 :islanders 10 :bridgers 6 
@@ -187,7 +228,7 @@
 (describe "different?"
   (with orf-map (build-orf 100 1000))
   (with single-orf-ibr-info (single-orf-alignment-info 
-                  @orf-map @sam-reader))
+                             @orf-map @sam-reader))
   (with sam-reader (make-sam-reader (make-sam-reader-factory) 
                                     sorted-bam 
                                     bam-index))

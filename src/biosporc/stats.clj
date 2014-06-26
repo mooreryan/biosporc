@@ -36,12 +36,29 @@
                                   #"p-value = " "")]
     (if (= "NA" p-val-str) 1.0 (Double. p-val-str))))
 
+(defn filter-unmapped-reads [read-maps]
+  (filter :mapped read-maps))
+
+(defn collapse-proper-pairs [read-maps]
+  (filter #(and (:proper-pair %) (:first %)) read-maps))
+
+(defn keep-mapped-singles-and-collapse-proper-pairs [read-maps]
+  (filter #(or (not (:proper-pair %)) 
+               (and (:proper-pair %)
+                    (:first %)))
+          read-maps))
+
 (defn ibr 
   "Calculates the ib-ratio for one read-map. This read map represents
-  the islanders and the bridgers from one region (ie one ORF)."
+  the islanders and the bridgers from one region (ie one ORF). It will
+  keep only mapped reads or the first read of any proper pair."
   [read-map]
-  (let [islander-count (count (:islanders read-map))
-        bridger-count (count (:bridgers read-map))]
+  (let [islander-count 
+        (count (keep-mapped-singles-and-collapse-proper-pairs 
+                (:islanders read-map)))
+        bridger-count 
+        (count (keep-mapped-singles-and-collapse-proper-pairs
+                (:bridgers read-map)))]
     (hash-map :islanders islander-count
               :bridgers bridger-count
               :ib-ratio (if (zero? (+ islander-count bridger-count))
