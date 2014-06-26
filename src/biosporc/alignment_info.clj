@@ -18,7 +18,9 @@
 (defn get-length [start end]
   (inc (- end start)))
 
-(defn get-record-info [bam-record]
+(defn get-record-info 
+  "TODO: utilize pair info"
+  [bam-record]
   (let [start (.getAlignmentStart bam-record)
         end (.getAlignmentEnd bam-record)]
     (hash-map :ref (.getReferenceName bam-record)
@@ -58,7 +60,8 @@
   bridgers."
   [contained-reads overlapping-reads]
   (hash-map :islanders contained-reads
-            :bridgers (clojure.set/difference overlapping-reads contained-reads)))
+            :bridgers (clojure.set/difference overlapping-reads 
+                                              contained-reads)))
 
 (defn single-orf-alignment-info 
   "Given a single orf-map and the sam-reader, gets the islanders and
@@ -73,7 +76,10 @@
         overlapping-reads (get-reads-par query-overlapping-reads)]
     (bin-reads contained-reads overlapping-reads)))
 
-(defn alignment-info [orf-maps sam-reader]
+(defn alignment-info 
+  "Gets alignment-info for one reference sequences ORFs. Will need to
+  be called for each reference you have."  
+  [orf-maps sam-reader]
   (into (hash-map) 
         (map (fn [orf-map]
                (hash-map (keyword (:orf orf-map)) 

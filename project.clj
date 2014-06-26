@@ -8,7 +8,8 @@
                  [htsjdk/samtools "1.114"]
                  [picard "1.114"]
                  [incanter "1.5.5"]
-                 [org.apache.commons/commons-math3 "3.3"]]
+                 [org.apache.commons/commons-math3 "3.3"]
+                 [org.clojure/tools.cli "0.3.1"]]
   :repositories [["local" 
                   {:url ~(str (.toURI (java.io.File. "repo")))}]]
   :profiles {:dev {:dependencies [[speclj "3.0.1"]]}}

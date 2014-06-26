@@ -186,7 +186,7 @@
 ;; if it isn't different, the ORF is good. Hooray!
 (describe "different?"
   (with orf-map (build-orf 100 1000))
-  (with read-map (single-orf-alignment-info 
+  (with single-orf-ibr-info (single-orf-alignment-info 
                   @orf-map @sam-reader))
   (with sam-reader (make-sam-reader (make-sam-reader-factory) 
                                     sorted-bam 
@@ -201,7 +201,7 @@
     (it "gives the p-val"
       (should (> @confidence
                  (different? @orf-map 
-                             @read-map 
+                             @single-orf-ibr-info 
                              @sam-reader 
                              @ref-lengths)))))
 
@@ -210,7 +210,8 @@
   (with good-sr (make-sam-reader (make-sam-reader-factory) 
                                  c4169-bam
                                  c4169-bai))
-  (with good-read-map (single-orf-alignment-info @good-orf @good-sr))
+  (with good-single-orf-ibr-info (single-orf-alignment-info @good-orf 
+                                                            @good-sr))
   (with good-ref-lengths (get-reference-lengths @good-sr))
 
   (context (str "when the mean of the jacknifes is not different from "
@@ -218,6 +219,6 @@
     (it "returns nil"
       (pending "Need to make a contig with a good ratio.")
       (should-not (different? @good-orf
-                              @good-read-map 
+                              @good-single-orf-ibr-info 
                               @good-sr
                               @good-ref-lengths)))))
