@@ -23,10 +23,6 @@
             [clojure.tools.cli :refer [parse-opts]])
   (:gen-class :main true))
 
-(def usage
-  (str "\nUSAGE: \njava -jar biosporc-x.y.z.jar -b <bam-file> "
-       "-i <index-file> -r <regions-file>"))
-
 (defn exist? [fname]
   (.exists (clojure.java.io/file fname)))
 
@@ -72,12 +68,11 @@
     ;; help and error conditions
     (cond
      (:help options) (exit 0 (usage summary))
-     (empty? options) (exit 1 (usage summary))
-     (not= (count options) 3) (exit 1 (str (error-msg errors) 
-                                           (usage summary)))
-     errors (exit 1 (error-msg errors)))
+     errors (exit 1 (error-msg errors))
+     (not= (count options) 3) (exit 1 (str "Incorrect number of options!"
+                                           (usage summary))))
+    
     ;; run program with options
-
     (let [each-refs-orf-maps (region-info-into-map 
                               (parse-region-file (:region-file options)))
           refs (keys each-refs-orf-maps)
