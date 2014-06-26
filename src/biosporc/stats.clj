@@ -1,7 +1,7 @@
 (ns biosporc.stats
-  (:require [biosporc.alignment-info :refer :all])
-  (:use [clojure.java.shell :only [sh]]
-        [clojure.string :only [join replace]]))
+  (:require [biosporc.alignment-info :refer :all]
+            [clojure.string :as string])
+  (:use [clojure.java.shell :only [sh]]))
 
 (defn r [r-string]
   (let [{:keys [exit out err]} (apply sh ["Rscript" "-e" r-string])] 
@@ -11,11 +11,11 @@
   "Returns 1.0 if p-val is NA, else returns the p-val for R's
   wilcox.test function."  
   [ib-ratio jacknife-ib-ratios]
-  (let [x (format "c(%s)" (join ", " jacknife-ib-ratios))
+  (let [x (format "c(%s)" (string/join ", " jacknife-ib-ratios))
         mu ib-ratio
         report (r (format "wilcox.test(x=%s, mu=%s)" x mu))
-        p-val-str (replace (re-find #"p-value = .*" report)
-                           #"p-value = " "")]
+        p-val-str (string/replace (re-find #"p-value = .*" report)
+                                  #"p-value = " "")]
     (if (= "NA" p-val-str) 1.0 (Double. p-val-str))))
 
 (defn ibr 
@@ -24,7 +24,7 @@
   [read-map]
   (let [islander-count (count (:islanders read-map))
         bridger-count (count (:bridgers read-map))]
-   (hash-map :islanders islander-count
+    (hash-map :islanders islander-count
               :bridgers bridger-count
               :ib-ratio (if (zero? (+ islander-count bridger-count))
                           ;;:TODO-deal-with-this in a smarter way,
