@@ -1,5 +1,6 @@
 (ns biosporc.alignment-info
-  (:require [clojure.java.io :as io])
+  (:require [clojure.java.io :as io]
+            [clojure.set :as set])
   (:import (htsjdk.samtools SamReaderFactory
                             SamInputResource
                             ValidationStringency)))
@@ -60,8 +61,8 @@
   bridgers."
   [contained-reads overlapping-reads]
   (hash-map :islanders contained-reads
-            :bridgers (clojure.set/difference overlapping-reads 
-                                              contained-reads)))
+            :bridgers (set/difference overlapping-reads 
+                                      contained-reads)))
 
 (defn single-orf-alignment-info 
   "Given a single orf-map and the sam-reader, gets the islanders and
