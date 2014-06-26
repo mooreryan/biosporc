@@ -38,15 +38,30 @@
   (inc (- end start)))
 
 (defn get-record-info 
-  "TODO: utilize pair info"
+  "This works on bam records from the iterator opened on the sam-reader."
   [bam-record]
   (let [start (.getAlignmentStart bam-record)
-        end (.getAlignmentEnd bam-record)]
+        end (.getAlignmentEnd bam-record)
+        paired (.getReadPairedFlag bam-record)
+        proper-pair (if paired (.getProperPairFlag bam-record))]
     (hash-map :ref (.getReferenceName bam-record)
               :read (.getReadName bam-record)
               :start start
               :end end
-              :len (get-length start end))))
+              :len (get-length start end)
+              :mapped (not (.getReadUnmappedFlag bam-record))
+              :read-paired paired
+              :proper-pair proper-pair
+              :first (if paired (.getFirstOfPairFlag bam-record))
+              :second (if paired (.getSecondOfPairFlag bam-record))
+              :mate-mapped (if paired 
+                             (not (.getMateUnmappedFlag bam-record)))
+              :mate-ref-name (if paired 
+                               (.getMateReferenceName bam-record))
+              :inferred-insert-size ; might be zero
+              ;; should keep things from being negative or zero
+              (if proper-pair
+                (.getInferredInsertSize bam-record)))))
 
 (defn get-all-align-info
   "Returns a seq of maps containing info for all sequences."

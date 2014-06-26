@@ -19,8 +19,7 @@
 (ns biosporc.stats-spec
   (:require [speclj.core :refer :all]
             [biosporc.stats :refer :all]
-            [biosporc.alignment-info :refer :all]
-            [incanter.stats :as stat]))
+            [biosporc.alignment-info :refer :all]))
 
 (def base "/Users/ryanmoore/projects/wommack/biosporc/test_files")
 (def sorted-bam
