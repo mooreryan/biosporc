@@ -87,20 +87,22 @@
                            (alignment-info orf-maps sam-reader)))
                        each-refs-orf-maps))]
       (println "ref\torf\tflag")
-      (doall (map print-info
-                  (flatten (map (fn call-different?-for-each-reference [ref]
-                                  (let [orf-maps (ref each-refs-orf-maps)
-                                        biosporc-map (ref biosporc-maps)]
-                                    (map (fn call-different? [x y] 
-                                           (let [orf-map x
-                                                 [orf ibr-info] y]
-                                             (hash-map :ref ref
-                                                       :orf orf
-                                                       :flag
-                                                       (different? orf-map 
-                                                                   ibr-info 
-                                                                   sam-reader 
-                                                                   ref-lengths))))
-                                         orf-maps biosporc-map))) 
-                                refs))))))
+      (doall 
+       (map print-info
+            (flatten 
+             (map (fn call-different?-for-each-reference [ref]
+                    (let [orf-maps (ref each-refs-orf-maps)
+                          biosporc-map (ref biosporc-maps)]
+                      (map (fn call-different? [x y] 
+                             (let [orf-map x
+                                   [orf ibr-info] y]
+                               (hash-map :ref ref
+                                         :orf orf
+                                         :flag
+                                         (different? orf-map 
+                                                     ibr-info 
+                                                     sam-reader 
+                                                     ref-lengths))))
+                           orf-maps biosporc-map))) 
+                  refs))))))
   (System/exit 0))
