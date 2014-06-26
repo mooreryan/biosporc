@@ -1,4 +1,4 @@
-(defproject biosporc_new "0.0.1"
+(defproject biosporc "0.0.1"
   :description "BioSPORC"
   :url "Let's hunt some chimeras."
   :license {:name "GNU General Public License, GPLv3"
@@ -11,4 +11,5 @@
                   {:url ~(str (.toURI (java.io.File. "repo")))}]]
   :profiles {:dev {:dependencies [[speclj "3.0.1"]]}}
   :plugins [[speclj "3.0.1"]]
-  :test-paths ["spec"])
+  :test-paths ["spec"]
+  :main biosporc.core)
