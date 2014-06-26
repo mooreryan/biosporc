@@ -102,4 +102,5 @@
                                                                    sam-reader 
                                                                    ref-lengths))))
                                          orf-maps biosporc-map))) 
-                                refs)))))))
+                                refs))))))
+  (System/exit 0))
