@@ -1,4 +1,4 @@
-(defproject biosporc "0.0.1"
+(defproject biosporc "0.0.1-parallel-c"
   :description "BioSPORC"
   :url "Let's hunt some chimeras."
   :license {:name "GNU General Public License, GPLv3"

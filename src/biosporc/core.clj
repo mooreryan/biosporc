@@ -33,6 +33,8 @@
     :validate [exist? "The bam index doesn't exist!"]]
    ["-r" "--region-file regions.csv" "A CSV with region info"
     :validate [exist? "The region file doesn't exist!"]]
+   ["-p" "--parallel" (str "Spawn as threads based on num available "
+                           "processors.")]
    ["-h" "--help"]])
 
 (defn usage [options-summary]
@@ -69,8 +71,10 @@
     (cond
      (:help options) (exit 0 (usage summary))
      errors (exit 1 (error-msg errors))
-     (not= (count options) 3) (exit 1 (str "Incorrect number of options!"
-                                           (usage summary))))
+     (and  (not= (count options) 3)
+           (not= (count options) 4)) 
+     (exit 1 (str "Incorrect number of options!"
+                  (usage summary))))
     
     ;; run program with options
     (let [each-refs-orf-maps (region-info-into-map 
@@ -87,22 +91,46 @@
                            (alignment-info orf-maps sam-reader)))
                        each-refs-orf-maps))]
       (println "ref\torf\tflag")
-      (doall 
-       (map print-info
-            (flatten 
-             (map (fn call-different?-for-each-reference [ref]
-                    (let [orf-maps (ref each-refs-orf-maps)
-                          biosporc-map (ref biosporc-maps)]
-                      (map (fn call-different? [x y] 
-                             (let [orf-map x
-                                   [orf ibr-info] y]
-                               (hash-map :ref ref
-                                         :orf orf
-                                         :flag
-                                         (different? orf-map 
-                                                     ibr-info 
-                                                     sam-reader 
-                                                     ref-lengths))))
-                           orf-maps biosporc-map))) 
-                  refs))))))
+      (if (:parallel options) 
+        (doall 
+         (map print-info
+              (flatten 
+               (map (fn call-different?-for-each-reference [ref]
+                      (let [orf-maps (ref each-refs-orf-maps)
+                            biosporc-map (ref biosporc-maps)]
+                        (pmap (fn call-different? [x y] 
+                                (let [orf-map x
+                                      [orf ibr-info] y
+                                      this-sam-reader 
+                                      (make-sam-reader 
+                                       (make-sam-reader-factory)
+                                       (:sorted-bam options)
+                                       (:bam-index options))]
+                                  (hash-map :ref ref
+                                            :orf orf
+                                            :flag
+                                            (different? orf-map 
+                                                        ibr-info 
+                                                        this-sam-reader
+                                                        ref-lengths))))
+                              orf-maps biosporc-map))) 
+                    refs))))
+        (doall 
+         (map print-info
+              (flatten 
+               (map (fn call-different?-for-each-reference [ref]
+                      (let [orf-maps (ref each-refs-orf-maps)
+                            biosporc-map (ref biosporc-maps)]
+                        (map (fn call-different? [x y] 
+                                (let [orf-map x
+                                      [orf ibr-info] y]
+                                  (hash-map :ref ref
+                                            :orf orf
+                                            :flag
+                                            (different? orf-map 
+                                                        ibr-info 
+                                                        sam-reader
+                                                        ref-lengths))))
+                              orf-maps biosporc-map))) 
+                    refs)))))))
   (System/exit 0))
