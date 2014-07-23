@@ -28,9 +28,10 @@
 (def regions
   (str base "/orf_regions.csv"))
 
-#_(describe "-main"
+(describe "-main"
     (context "with proper arguments"
       (it "prints the biosporc info"
         (should-not (-main "-b" sorted-bam 
                            "-i" bam-index 
-                           "-r" regions)))))
+                           "-r" regions
+                           "-p")))))

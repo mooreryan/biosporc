@@ -33,7 +33,7 @@
     :validate [exist? "The bam index doesn't exist!"]]
    ["-r" "--region-file regions.csv" "A CSV with region info"
     :validate [exist? "The region file doesn't exist!"]]
-   ["-p" "--parallel" (str "Spawn as threads based on num available "
+   ["-p" "--parallel" (str "Spawn threads based on num available "
                            "processors.")]
    ["-h" "--help"]])
 
@@ -59,10 +59,15 @@
   (System/exit status))
 
 (defn- print-info [info-map]
-  (println (format "%s\t%s\t%s" 
+  (println (format "%s\t%s\t%s\t%s\t%s\t%s\t%s" 
                    (name (:ref info-map)) 
                    (name (:orf info-map)) 
-                   (:flag info-map))))
+                   (:flag info-map)
+                   (:ib-ratio info-map)
+                   (:islanders info-map)
+                   (:bridgers info-map)
+                   (+ (:islanders info-map)
+                      (:bridgers info-map)))))
 
 (defn -main [& args]
   (let [{:keys [options arguments errors summary]}
@@ -90,7 +95,7 @@
                          (let [reference (first rec) orf-maps (last rec)]
                            (alignment-info orf-maps sam-reader)))
                        each-refs-orf-maps))]
-      (println "ref\torf\tflag")
+      (println "ref\torf\tflag\tib-ratio\tislanders\tbridgers\tall")
       (if (:parallel options) 
         (doall 
          (map print-info
@@ -106,13 +111,12 @@
                                        (make-sam-reader-factory)
                                        (:sorted-bam options)
                                        (:bam-index options))]
-                                  (hash-map :ref ref
-                                            :orf orf
-                                            :flag
-                                            (different? orf-map 
-                                                        ibr-info 
-                                                        this-sam-reader
-                                                        ref-lengths))))
+                                  (into (hash-map :ref ref
+                                                  :orf orf)
+                                        (different? orf-map 
+                                                    ibr-info 
+                                                    this-sam-reader
+                                                    ref-lengths))))
                               orf-maps biosporc-map))) 
                     refs))))
         (doall 

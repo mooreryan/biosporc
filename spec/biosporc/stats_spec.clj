@@ -241,10 +241,10 @@
                 "real ib-ratio")
     (it "gives the p-val"
       (should (> @confidence
-                 (different? @orf-map 
-                             @single-orf-ibr-info 
-                             @sam-reader 
-                             @ref-lengths)))))
+                 (:flag (different? @orf-map 
+                                    @single-orf-ibr-info 
+                                    @sam-reader 
+                                    @ref-lengths))))))
 
   (with good-orf {:orf "orf1" :ref "C4169" :start 2 :end 163 
                   :len (inc (- 163 2))})
@@ -259,7 +259,7 @@
                 "the real ib-ratio")
     (it "returns nil"
       (pending "Need to make a contig with a good ratio.")
-      (should-not (different? @good-orf
-                              @good-single-orf-ibr-info 
-                              @good-sr
-                              @good-ref-lengths)))))
+      (should-not (:flag (different? @good-orf
+                                     @good-single-orf-ibr-info 
+                                     @good-sr
+                                     @good-ref-lengths))))))

@@ -98,7 +98,8 @@
     (if (<= pval confidence) pval)))
 
 (defn different?
-  "Doing 100 random orf maps cos WTFN?"
+  "Doing 30 random orf maps cos WTFN? Outputs a map
+  with :flag, :islanders, :bridgers, :ib-ratio."  
   [orf-map read-map sam-reader ref-lengths]
   (let [num 30
         ref-length ((keyword (:ref orf-map)) ref-lengths)
@@ -123,5 +124,7 @@
     ;; (println "ibr-ratios-from-random-orfs" ibr-ratios-from-random-orfs)
     ;; (println "this ibr" (:ib-ratio real-ib-ratio))
 
-    (different-mean? (:ib-ratio real-ib-ratio) 
-                     ibr-ratios-from-random-orfs)))
+    (into real-ib-ratio
+          (hash-map :flag 
+                    (different-mean? (:ib-ratio real-ib-ratio) 
+                                     ibr-ratios-from-random-orfs)))))
